@@ -8,14 +8,14 @@ type Bpm = i32;
 
 fn main() -> std::io::Result<()> {
     let mut f = BufWriter::new(File::create("foo.pcm")?);
-    let source = Generator{};
+    let source = Sine{};
     let volume = 0.2;
     let melody = vec![
         Note::H(Duration::Whole(90), volume),
-        Note::F(Duration::Whole(90), volume),
+        Note::Fis(Duration::Whole(90), volume),
         Note::E(Duration::Half(90), volume),
         Note::H(Duration::Half(90), volume),
-        Note::F(Duration::Whole(90), volume),
+        Note::Fis(Duration::Whole(90), volume),
     ];
     for note in melody {
         println!("playing {:?}", note);
@@ -26,12 +26,15 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-struct Generator {
+trait Generator {
+    fn amplitude_at(&self, point: f32, freq: f32, volume: f32) -> f32;
 }
 
-impl Generator {
-    fn amplitude_at(&self, sample: f32, freq: f32, volume: f32) -> f32 {
-        volume * (freq * sample * 2.0 * PI).sin()
+struct Sine {}
+
+impl Generator for Sine {
+    fn amplitude_at(&self, point: f32, freq: f32, volume: f32) -> f32 {
+        volume * (freq * point * 2.0 * PI).sin()
     }
 }
 
@@ -42,7 +45,7 @@ struct Tone {
 }
 
 impl Tone {
-    fn play(&self, generator: &Generator) -> Vec<f32> {
+    fn play(&self, generator: &impl Generator) -> Vec<f32> {
         let mut samples: Vec<f32> = Vec::new();
         let duration = (SAMPLE_RATE as f32 * self.duration).floor() as i32;
         for i in 0..duration {
