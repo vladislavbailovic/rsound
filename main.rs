@@ -51,7 +51,7 @@ trait Generator {
 
 #[derive(Default)]
 struct Sine {
-    offset: f32
+    detune: f32
 }
 
 impl Generator for Sine {
@@ -67,14 +67,14 @@ struct Double {
 
 impl Double {
     fn new() -> Self {
-        Double{ one: Sine::default(), two: Sine{offset: 0.3333} }
+        Double{ one: Sine::default(), two: Sine{detune: 1.3333} }
     }
 }
 
 impl Generator for Double {
     fn amplitude_at(&self, point: f32, freq: f32, volume: f32) -> f32 {
         self.one.amplitude_at(point, freq, volume * 0.75) +
-        self.two.amplitude_at(point, freq / 1.12, volume * 0.25)
+        self.two.amplitude_at(point, freq / self.two.detune, volume * 0.25)
     }
 }
 
