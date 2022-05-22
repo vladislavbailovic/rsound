@@ -12,7 +12,10 @@ fn main() -> std::io::Result<()> {
     // let source = Square::default();
     let volume = 0.2;
     let melody = Sequencer::new(90, vec![
-        Note::H(Duration::Whole, volume),
+        Note::H(Duration::Quarter, volume),
+        Note::H(Duration::Quarter, volume),
+        Note::H(Duration::Quarter, volume),
+        Note::Pause(Duration::Quarter),
         Note::Fis(Duration::Whole, volume),
         Note::E(Duration::Half, volume),
         Note::H(Duration::Half, volume),
@@ -168,6 +171,7 @@ enum Note {
     A(Duration, Volume),
     B(Duration, Volume),
     H(Duration, Volume),
+    Pause(Duration),
 }
 
 impl Note {
@@ -185,6 +189,7 @@ impl Note {
             Note::A(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 440.0},
             Note::B(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 466.16},
             Note::H(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 493.88},
+            Note::Pause(d) => Signal{duration: d.length(bpm), volume: 0.0, freq: 0.0 },
         }
     }
 }
