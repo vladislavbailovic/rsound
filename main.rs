@@ -8,7 +8,7 @@ type Bpm = i32;
 
 fn main() -> std::io::Result<()> {
     let mut f = BufWriter::new(File::create("foo.pcm")?);
-    let source = Sine{};
+    let source = Double::new();
     let volume = 0.2;
     let melody = vec![
         Note::H(Duration::Whole(90), volume),
@@ -30,7 +30,10 @@ trait Generator {
     fn amplitude_at(&self, point: f32, freq: f32, volume: f32) -> f32;
 }
 
-struct Sine {}
+#[derive(Default)]
+struct Sine {
+    offset: f32
+}
 
 impl Generator for Sine {
     fn amplitude_at(&self, point: f32, freq: f32, volume: f32) -> f32 {
@@ -38,13 +41,31 @@ impl Generator for Sine {
     }
 }
 
-struct Tone {
+struct Double {
+    one: Sine,
+    two: Sine
+}
+
+impl Double {
+    fn new() -> Self {
+        Double{ one: Sine::default(), two: Sine{offset: 0.3333} }
+    }
+}
+
+impl Generator for Double {
+    fn amplitude_at(&self, point: f32, freq: f32, volume: f32) -> f32 {
+        self.one.amplitude_at(point, freq, volume * 0.75) +
+        self.two.amplitude_at(point, freq / 1.12, volume * 0.25)
+    }
+}
+
+struct Signal {
     duration: f32,
     freq: f32,
     volume: f32,
 }
 
-impl Tone {
+impl Signal {
     fn play(&self, generator: &impl Generator) -> Vec<f32> {
         let mut samples: Vec<f32> = Vec::new();
         let duration = (SAMPLE_RATE as f32 * self.duration).floor() as i32;
@@ -96,20 +117,20 @@ enum Note {
 }
 
 impl Note {
-    fn tone(&self) -> Tone {
+    fn tone(&self) -> Signal {
         match self {
-            Note::C(d, v) => Tone{duration: d.length(), volume: *v, freq: 261.63},
-            Note::Cis(d, v) => Tone{duration: d.length(), volume: *v, freq: 277.18},
-            Note::D(d, v) => Tone{duration: d.length(), volume: *v, freq: 293.66},
-            Note::Dis(d, v) => Tone{duration: d.length(), volume: *v, freq: 311.13},
-            Note::E(d, v) => Tone{duration: d.length(), volume: *v, freq: 329.63},
-            Note::F(d, v) => Tone{duration: d.length(), volume: *v, freq: 349.23},
-            Note::Fis(d, v) => Tone{duration: d.length(), volume: *v, freq: 369.99},
-            Note::G(d, v) => Tone{duration: d.length(), volume: *v, freq: 392.00},
-            Note::Gis(d, v) => Tone{duration: d.length(), volume: *v, freq: 415.30},
-            Note::A(d, v) => Tone{duration: d.length(), volume: *v, freq: 440.0},
-            Note::B(d, v) => Tone{duration: d.length(), volume: *v, freq: 466.16},
-            Note::H(d, v) => Tone{duration: d.length(), volume: *v, freq: 493.88},
+            Note::C(d, v) => Signal{duration: d.length(), volume: *v, freq: 261.63},
+            Note::Cis(d, v) => Signal{duration: d.length(), volume: *v, freq: 277.18},
+            Note::D(d, v) => Signal{duration: d.length(), volume: *v, freq: 293.66},
+            Note::Dis(d, v) => Signal{duration: d.length(), volume: *v, freq: 311.13},
+            Note::E(d, v) => Signal{duration: d.length(), volume: *v, freq: 329.63},
+            Note::F(d, v) => Signal{duration: d.length(), volume: *v, freq: 349.23},
+            Note::Fis(d, v) => Signal{duration: d.length(), volume: *v, freq: 369.99},
+            Note::G(d, v) => Signal{duration: d.length(), volume: *v, freq: 392.00},
+            Note::Gis(d, v) => Signal{duration: d.length(), volume: *v, freq: 415.30},
+            Note::A(d, v) => Signal{duration: d.length(), volume: *v, freq: 440.0},
+            Note::B(d, v) => Signal{duration: d.length(), volume: *v, freq: 466.16},
+            Note::H(d, v) => Signal{duration: d.length(), volume: *v, freq: 493.88},
         }
     }
 }
