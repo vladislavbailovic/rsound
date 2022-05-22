@@ -10,20 +10,39 @@ fn main() -> std::io::Result<()> {
     let mut f = BufWriter::new(File::create("foo.pcm")?);
     let source = Double::new();
     let volume = 0.2;
-    let melody = vec![
-        Note::H(Duration::Whole(90), volume),
-        Note::Fis(Duration::Whole(90), volume),
-        Note::E(Duration::Half(90), volume),
-        Note::H(Duration::Half(90), volume),
-        Note::Fis(Duration::Whole(90), volume),
-    ];
-    for note in melody {
-        println!("playing {:?}", note);
-        for sample in note.tone().play(&source) {
-            f.write(&sample.to_le_bytes())?;
-        }
+    let melody = Sequencer::new(90, vec![
+        Note::H(Duration::Whole, volume),
+        Note::Fis(Duration::Whole, volume),
+        Note::E(Duration::Half, volume),
+        Note::H(Duration::Half, volume),
+        Note::Fis(Duration::Whole, volume),
+    ]);
+    for sample in melody.play(&source) {
+        f.write(&sample.to_le_bytes())?;
     }
     Ok(())
+}
+
+struct Sequencer {
+    tempo: Bpm,
+    sequence: Vec<Note>
+}
+
+impl Sequencer {
+    fn new(tempo: Bpm, sequence: Vec<Note>) -> Self {
+        Self{ tempo, sequence }
+    }
+
+    fn play(&self, instrument: &impl Generator) -> Vec<f32> {
+        let mut score = Vec::new();
+        for sound in &self.sequence {
+            println!("playing {:?}", sound);
+            for sample in sound.signal(self.tempo).play(instrument) {
+                score.push(sample);
+            }
+        }
+        score
+    }
 }
 
 trait Generator {
@@ -79,21 +98,21 @@ impl Signal {
 
 #[derive(Debug)]
 enum Duration {
-    Sixteenth(Bpm),
-    Eighth(Bpm),
-    Quarter(Bpm),
-    Half(Bpm),
-    Whole(Bpm),
+    Sixteenth,
+    Eighth,
+    Quarter,
+    Half,
+    Whole,
 }
 
 impl Duration {
-    fn length(&self) -> f32 {
+    fn length(&self, bpm: Bpm) -> f32 {
         match self {
-            Duration::Sixteenth(bpm) => 60.0 / *bpm as f32 / 4.0,
-            Duration::Eighth(bpm) => 60.0 / *bpm as f32 / 2.0,
-            Duration::Quarter(bpm) => 60.0 / *bpm as f32,
-            Duration::Half(bpm) => (60.0 / *bpm as f32) * 2.0,
-            Duration::Whole(bpm) => (60.0 / *bpm as f32) * 4.0,
+            Duration::Sixteenth => 60.0 / bpm as f32 / 4.0,
+            Duration::Eighth => 60.0 / bpm as f32 / 2.0,
+            Duration::Quarter => 60.0 / bpm as f32,
+            Duration::Half => (60.0 / bpm as f32) * 2.0,
+            Duration::Whole => (60.0 / bpm as f32) * 4.0,
         }
     }
 }
@@ -117,20 +136,20 @@ enum Note {
 }
 
 impl Note {
-    fn tone(&self) -> Signal {
+    fn signal(&self, bpm: Bpm) -> Signal {
         match self {
-            Note::C(d, v) => Signal{duration: d.length(), volume: *v, freq: 261.63},
-            Note::Cis(d, v) => Signal{duration: d.length(), volume: *v, freq: 277.18},
-            Note::D(d, v) => Signal{duration: d.length(), volume: *v, freq: 293.66},
-            Note::Dis(d, v) => Signal{duration: d.length(), volume: *v, freq: 311.13},
-            Note::E(d, v) => Signal{duration: d.length(), volume: *v, freq: 329.63},
-            Note::F(d, v) => Signal{duration: d.length(), volume: *v, freq: 349.23},
-            Note::Fis(d, v) => Signal{duration: d.length(), volume: *v, freq: 369.99},
-            Note::G(d, v) => Signal{duration: d.length(), volume: *v, freq: 392.00},
-            Note::Gis(d, v) => Signal{duration: d.length(), volume: *v, freq: 415.30},
-            Note::A(d, v) => Signal{duration: d.length(), volume: *v, freq: 440.0},
-            Note::B(d, v) => Signal{duration: d.length(), volume: *v, freq: 466.16},
-            Note::H(d, v) => Signal{duration: d.length(), volume: *v, freq: 493.88},
+            Note::C(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 261.63},
+            Note::Cis(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 277.18},
+            Note::D(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 293.66},
+            Note::Dis(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 311.13},
+            Note::E(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 329.63},
+            Note::F(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 349.23},
+            Note::Fis(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 369.99},
+            Note::G(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 392.00},
+            Note::Gis(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 415.30},
+            Note::A(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 440.0},
+            Note::B(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 466.16},
+            Note::H(d, v) => Signal{duration: d.length(bpm), volume: *v, freq: 493.88},
         }
     }
 }
