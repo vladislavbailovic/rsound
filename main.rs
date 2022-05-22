@@ -9,6 +9,7 @@ type Bpm = i32;
 fn main() -> std::io::Result<()> {
     let mut f = BufWriter::new(File::create("foo.pcm")?);
     let source = Double::new();
+    // let source = Square::default();
     let volume = 0.2;
     let melody = Sequencer::new(90, vec![
         Note::H(Duration::Whole, volume),
@@ -54,6 +55,15 @@ struct Sine {
     detune: f32
 }
 
+impl Sine {
+    fn new(detune: f32) -> Self {
+        Self{
+            detune,
+            ..Sine::default()
+        }
+    }
+}
+
 impl Generator for Sine {
     fn amplitude_at(&self, point: f32, freq: f32, volume: f32) -> f32 {
         volume * (freq * point * 2.0 * PI).sin()
@@ -61,13 +71,13 @@ impl Generator for Sine {
 }
 
 struct Double {
-    one: Sine,
-    two: Sine
+    one: Square,
+    two: Square
 }
 
 impl Double {
     fn new() -> Self {
-        Double{ one: Sine::default(), two: Sine{detune: 1.3333} }
+        Double{ one: Square::default(), two: Square::new(1.3333) }
     }
 }
 
@@ -75,6 +85,31 @@ impl Generator for Double {
     fn amplitude_at(&self, point: f32, freq: f32, volume: f32) -> f32 {
         self.one.amplitude_at(point, freq, volume * 0.75) +
         self.two.amplitude_at(point, freq / self.two.detune, volume * 0.25)
+    }
+}
+
+#[derive(Default)]
+struct Square {
+    sine: Sine,
+    detune: f32
+}
+
+impl Square {
+    fn new(detune: f32) -> Self {
+        Self{
+            detune,
+            ..Square::default()
+        }
+    }
+}
+
+impl Generator for Square {
+    fn amplitude_at(&self, point: f32, freq: f32, volume: f32) -> f32 {
+        if self.sine.amplitude_at(point, freq, volume) > 0.0 {
+            volume
+        } else {
+            volume * -1.0
+        }
     }
 }
 
