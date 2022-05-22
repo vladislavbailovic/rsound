@@ -13,6 +13,7 @@ fn main() -> std::io::Result<()> {
     let source1 = Sine::default();
     // let source2 = Triangle::default();
     let source2 = Double::new();
+    // let source2 = Saw::default();
     let volume = 0.5;
     let melody = Sequencer::new(90, vec![
         Note::H(Duration::Quarter, volume),
@@ -81,12 +82,12 @@ impl Generator for Sine {
 
 struct Double {
     one: Sine,
-    two: Triangle
+    two: Saw
 }
 
 impl Double {
     fn new() -> Self {
-        Double{ one: Sine::default(), two: Triangle::new(1.3333) }
+        Double{ one: Sine::default(), two: Saw::new(1.3333) }
     }
 }
 
@@ -124,22 +125,35 @@ impl Generator for Square {
 
 #[derive(Default)]
 struct Triangle {
-    sine: Sine,
     detune: f32,
 }
 
 impl Triangle {
     fn new(detune: f32) -> Self {
-        Self{
-            detune,
-            ..Triangle::default()
-        }
+        Self{ detune }
     }
 }
 
 impl Generator for Triangle {
     fn amplitude_at(&self, point: f32, freq: f32, volume: f32) -> f32 {
         (2.0 * volume / PI) * (freq * point * 2.0 * PI).sin().asin()
+    }
+}
+
+#[derive(Default)]
+struct Saw {
+    detune: f32
+}
+
+impl Saw {
+    fn new(detune: f32) -> Self {
+        Self{ detune }
+    }
+}
+
+impl Generator for Saw {
+    fn amplitude_at(&self, point: f32, freq: f32, volume: f32) -> f32 {
+        volume * (2.0 / PI) * (freq * PI * (point % (1.0 / freq)) - (PI / 2.0))
     }
 }
 
