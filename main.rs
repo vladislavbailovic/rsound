@@ -7,6 +7,8 @@ const SAMPLE_RATE: i32 = 44100;
 type Bpm = i32;
 
 fn main() -> std::io::Result<()> {
+    use Note::*;
+    use Duration::*;
     let mut f = BufWriter::new(File::create("foo.pcm")?);
     // let source = Double::new();
     // let source = Square::default();
@@ -15,15 +17,15 @@ fn main() -> std::io::Result<()> {
     let source2 = Double::new();
     // let source2 = Saw::default();
     let volume = 0.5;
-    let melody = Sequencer::new(90, vec![
-        Note::H(Duration::Quarter, volume),
-        Note::H(Duration::Quarter, volume),
-        Note::H(Duration::Quarter, volume),
-        Note::Pause(Duration::Quarter),
-        Note::Fis(Duration::Whole, volume),
-        Note::E(Duration::Half, volume),
-        Note::H(Duration::Half, volume),
-        Note::Fis(Duration::Whole, volume),
+    let melody = Sequence::new(90, vec![
+        H(Quarter, volume),
+        H(Quarter, volume),
+        H(Quarter, volume),
+        Pause(Quarter),
+        Fis(Whole, volume),
+        E(Half, volume),
+        H(Half, volume),
+        Fis(Whole, volume),
     ]);
     for sample in melody.play(&source1) {
         f.write(&sample.to_le_bytes())?;
@@ -34,12 +36,12 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-struct Sequencer {
+struct Sequence {
     tempo: Bpm,
     sequence: Vec<Note>
 }
 
-impl Sequencer {
+impl Sequence {
     fn new(tempo: Bpm, sequence: Vec<Note>) -> Self {
         Self{ tempo, sequence }
     }
