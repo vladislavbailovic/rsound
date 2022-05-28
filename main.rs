@@ -1,64 +1,22 @@
-use std::fs::File;
-use std::io::{Write,BufWriter};
 use std::f32::consts::PI;
+
+mod output;
+use output::{pcm,ppm};
+
 
 const SAMPLE_RATE: i32 = 44100;
 
 type Bpm = i32;
 
-fn save_pcm(sequence: &[f32]) -> std::io::Result<()> {
-    let mut f = BufWriter::new(File::create("foo.pcm")?);
-    for sample in sequence {
-        f.write(&sample.to_le_bytes())?;
-    }
-    Ok(())
-}
-
-fn save_ppm(sequence: &[f32]) -> std::io::Result<()> {
-    let WIDTH: i32 = 800;
-    let HEIGHT: i32 = 600;
-    let max_size = 3 * WIDTH * HEIGHT;
-    let mut buffer = vec![0; (max_size as usize)];
-
-    let sample_len = sequence.len();
-    let wps = WIDTH as f32 / sample_len as f32;
-
-    let mut i = 0;
-    for sample in sequence {
-        let y = (sample * 50 as f32) as i32 + 250;
-        let x = (i as f32 * wps) as i32;
-        let offset = ((y * WIDTH * 3) + (x * 3)) as usize;
-
-        println!("i: {}, wps: {}, sample: {}, x: {}, y: {}, offset: {}, within range: {:?}", i, wps, sample, x, y, offset, max_size > offset as i32);
-
-        if offset >= max_size as usize {
-            continue;
-        }
-
-        buffer[offset] = 255;
-        buffer[offset+1] = 255;
-        buffer[offset+2] = 0;
-
-        i+=1;
-    }
-
-    let mut p = BufWriter::new(File::create("foo.ppm")?);
-    p.write(format!("P6 {} {} 255\n", WIDTH, HEIGHT).as_bytes())?;
-    p.write(&buffer)?;
-
-    Ok(())
-}
-
 fn main() -> std::io::Result<()> {
     use Note::*;
     use Duration::*;
-    // let source = Double::new();
+    // let source = Sine::default();
     // let source = Square::default();
-    let source1 = Sine::default();
-    // let source2 = Square::default();
-    let source2 = Double::new();
-    // let source2 = Triangle::default();
-    let volume = 0.75;
+    // let source = Triangle::default();
+    let source = Saw::default();
+    // let source = Double::new();
+    let volume = 1.0;
     let melody = Sequence::new(90, vec![
         H(Sixteenth, volume),
         // H(Quarter, volume),
@@ -70,11 +28,11 @@ fn main() -> std::io::Result<()> {
         // Fis(Whole, volume),
     ]);
     let mut samples = Vec::new();
-    for sample in melody.play(&source2) {
+    for sample in melody.play(&source) {
         samples.push(sample);
     }
-    save_pcm(&samples)?;
-    save_ppm(&samples)?;
+    ppm::save(&samples)?;
+    pcm::save(&samples)?;
 
     Ok(())
 }
