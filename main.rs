@@ -9,6 +9,18 @@ const SAMPLE_RATE: i32 = 44100;
 
 type Bpm = i32;
 
+fn draw_sample_envelope() -> std::io::Result<()> {
+    let duration = 4000;
+    let envelope = Envelope::new(Some(duration as f32 * 0.2), None, Some(duration as f32 * 0.4));
+    let mut samples = Vec::new();
+    for x in 1..duration {
+        let sample = envelope.amplitude_at(x as f32, 1.0, duration as f32);
+        samples.push(sample*-1.0);
+    }
+    ppm::save(&samples)?;
+    Ok(())
+}
+
 fn main() -> std::io::Result<()> {
     use Note::*;
     use Duration::*;
@@ -18,16 +30,16 @@ fn main() -> std::io::Result<()> {
     // let source = Saw::default();
     // let source = Double::new();
     let volume = 0.5;
-    let envelope = Envelope::new(Some(0.2), None, Some(0.4));
+    let envelope = Envelope::new(Some(0.02), None, Some(0.04));
     let melody = Sequence::new(90, vec![
         H(Quarter, volume),
-        // H(Quarter, volume),
-        // H(Quarter, volume),
-        // Pause(Quarter),
-        // Fis(Whole, volume),
-        // E(Half, volume),
-        // H(Half, volume),
-        // Fis(Whole, volume),
+        H(Quarter, volume),
+        H(Quarter, volume),
+        Pause(Quarter),
+        Fis(Whole, volume),
+        E(Half, volume),
+        H(Half, volume),
+        Fis(Whole, volume),
     ]);
     let mut samples = Vec::new();
     for sample in melody.play(&source, envelope) {

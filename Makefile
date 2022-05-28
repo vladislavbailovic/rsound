@@ -1,4 +1,6 @@
-main: main.rs
+RSFILES=$(shell find . -type f -name '*.rs')
+
+main: $(RSFILES)
 	rustc main.rs
 
 foo.pcm: main

@@ -31,7 +31,6 @@ impl Envelope {
                 return res;
             }
         }
-        println!("nothing: {}", point);
         volume
     }
 }
