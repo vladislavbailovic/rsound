@@ -11,14 +11,19 @@ type Bpm = i32;
 fn main() -> std::io::Result<()> {
     use Note::*;
     use Duration::*;
-    // let source = Sine::default();
+    let source = Sine::default();
     // let source = Square::default();
     // let source = Triangle::default();
-    let source = Saw::default();
+    // let source = Saw::default();
     // let source = Double::new();
-    let volume = 1.0;
+    let volume = 0.5;
+    let envelope = Envelope{
+        attack: Some(0.2),
+        sustain: None,
+        release: Some(0.4),
+    };
     let melody = Sequence::new(90, vec![
-        H(Sixteenth, volume),
+        H(Quarter, volume),
         // H(Quarter, volume),
         // H(Quarter, volume),
         // Pause(Quarter),
@@ -28,7 +33,7 @@ fn main() -> std::io::Result<()> {
         // Fis(Whole, volume),
     ]);
     let mut samples = Vec::new();
-    for sample in melody.play(&source) {
+    for sample in melody.play(&source, envelope) {
         samples.push(sample);
     }
     ppm::save(&samples)?;
@@ -47,15 +52,49 @@ impl Sequence {
         Self{ tempo, sequence }
     }
 
-    fn play(&self, instrument: &impl Generator) -> Vec<f32> {
+    fn play(&self, instrument: &impl Generator, envelope: Envelope) -> Vec<f32> {
         let mut score = Vec::new();
         for sound in &self.sequence {
             println!("playing {:?}", sound);
-            for sample in sound.signal(self.tempo).play(instrument) {
+            for sample in sound.signal(self.tempo).play(instrument, &envelope) {
                 score.push(sample);
             }
         }
         score
+    }
+}
+
+#[derive(Default)]
+struct Envelope {
+    attack: Option<f32>,
+    sustain: Option<f32>,
+    release: Option<f32>
+}
+
+impl Envelope {
+    fn amplitude_at(&self, point: f32, volume: f32, duration: f32) -> f32 {
+        if let Some(attack) = self.attack {
+            if attack > point {
+                let res = volume * (point/attack);
+                return res;
+            }
+        }
+        if let Some(sustain) = self.sustain {
+            let ms = duration - sustain;
+            if ms > point {
+                return volume;
+            }
+        }
+        if let Some(release) = self.release {
+            let minr = duration - release;
+            if point > minr {
+                let posr = duration - point;
+                let res = volume * (posr/release);
+                return res;
+            }
+        }
+        println!("nothing: {}", point);
+        volume
     }
 }
 
@@ -167,12 +206,13 @@ struct Signal {
 }
 
 impl Signal {
-    fn play(&self, generator: &impl Generator) -> Vec<f32> {
+    fn play(&self, generator: &impl Generator, envelope: &Envelope) -> Vec<f32> {
         let mut samples: Vec<f32> = Vec::new();
         let duration = (SAMPLE_RATE as f32 * self.duration).floor() as i32;
         for i in 0..duration {
             let t = i as f32 / SAMPLE_RATE as f32;
-            samples.push(generator.amplitude_at(t, self.freq, self.volume));
+            let volume = envelope.amplitude_at(t, self.volume, self.duration);
+            samples.push(generator.amplitude_at(t, self.freq, volume));
         }
         samples
     }
