@@ -6,33 +6,76 @@ const SAMPLE_RATE: i32 = 44100;
 
 type Bpm = i32;
 
+fn save_pcm(sequence: &[f32]) -> std::io::Result<()> {
+    let mut f = BufWriter::new(File::create("foo.pcm")?);
+    for sample in sequence {
+        f.write(&sample.to_le_bytes())?;
+    }
+    Ok(())
+}
+
+fn save_ppm(sequence: &[f32]) -> std::io::Result<()> {
+    let WIDTH: i32 = 800;
+    let HEIGHT: i32 = 600;
+    let max_size = 3 * WIDTH * HEIGHT;
+    let mut buffer = vec![0; (max_size as usize)];
+
+    let sample_len = sequence.len();
+    let wps = WIDTH as f32 / sample_len as f32;
+
+    let mut i = 0;
+    for sample in sequence {
+        let y = (sample * 50 as f32) as i32 + 250;
+        let x = (i as f32 * wps) as i32;
+        let offset = ((y * WIDTH * 3) + (x * 3)) as usize;
+
+        println!("i: {}, wps: {}, sample: {}, x: {}, y: {}, offset: {}, within range: {:?}", i, wps, sample, x, y, offset, max_size > offset as i32);
+
+        if offset >= max_size as usize {
+            continue;
+        }
+
+        buffer[offset] = 255;
+        buffer[offset+1] = 255;
+        buffer[offset+2] = 0;
+
+        i+=1;
+    }
+
+    let mut p = BufWriter::new(File::create("foo.ppm")?);
+    p.write(format!("P6 {} {} 255\n", WIDTH, HEIGHT).as_bytes())?;
+    p.write(&buffer)?;
+
+    Ok(())
+}
+
 fn main() -> std::io::Result<()> {
     use Note::*;
     use Duration::*;
-    let mut f = BufWriter::new(File::create("foo.pcm")?);
     // let source = Double::new();
     // let source = Square::default();
     let source1 = Sine::default();
-    // let source2 = Triangle::default();
+    // let source2 = Square::default();
     let source2 = Double::new();
-    // let source2 = Saw::default();
-    let volume = 0.5;
+    // let source2 = Triangle::default();
+    let volume = 0.75;
     let melody = Sequence::new(90, vec![
-        H(Quarter, volume),
-        H(Quarter, volume),
-        H(Quarter, volume),
-        Pause(Quarter),
-        Fis(Whole, volume),
-        E(Half, volume),
-        H(Half, volume),
-        Fis(Whole, volume),
+        H(Sixteenth, volume),
+        // H(Quarter, volume),
+        // H(Quarter, volume),
+        // Pause(Quarter),
+        // Fis(Whole, volume),
+        // E(Half, volume),
+        // H(Half, volume),
+        // Fis(Whole, volume),
     ]);
-    for sample in melody.play(&source1) {
-        f.write(&sample.to_le_bytes())?;
-    }
+    let mut samples = Vec::new();
     for sample in melody.play(&source2) {
-        f.write(&sample.to_le_bytes())?;
+        samples.push(sample);
     }
+    save_pcm(&samples)?;
+    save_ppm(&samples)?;
+
     Ok(())
 }
 
@@ -84,12 +127,12 @@ impl Generator for Sine {
 
 struct Double {
     one: Sine,
-    two: Saw
+    two: Square
 }
 
 impl Double {
     fn new() -> Self {
-        Double{ one: Sine::default(), two: Saw::new(1.3333) }
+        Double{ one: Sine::default(), two: Square::new(1.33) }
     }
 }
 
