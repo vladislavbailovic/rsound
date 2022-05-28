@@ -24,11 +24,11 @@ fn draw_sample_envelope() -> std::io::Result<()> {
 fn main() -> std::io::Result<()> {
     use Note::*;
     use Duration::*;
-    let source = Sine::default();
+    // let source = Sine::default();
     // let source = Square::default();
     // let source = Triangle::default();
     // let source = Saw::default();
-    // let source = Double::new();
+    let source = Double::new();
     let volume = 0.5;
     let envelope = Envelope::new(Some(0.02), None, Some(0.04));
     let melody = Sequence::new(90, vec![
