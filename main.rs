@@ -31,6 +31,7 @@ fn main() -> std::io::Result<()> {
     let source = Double::new();
     let volume = 0.5;
     let envelope = Envelope::new(Some(0.02), None, Some(0.04));
+    /*
     let melody = Sequence::new(90, vec![
         H(Quarter, volume),
         H(Quarter, volume),
@@ -40,6 +41,50 @@ fn main() -> std::io::Result<()> {
         E(Half, volume),
         H(Half, volume),
         Fis(Whole, volume),
+    ]);
+    */
+    let melody = Sequence::new(133, vec![
+        A(Sixteenth, volume),
+        A(Sixteenth, volume),
+        A(Sixteenth, volume),
+        Pause(Sixteenth),
+        A(Eighth, volume),
+        G(Eighth, volume),
+        Fis(Quarter, volume),
+        Fis(Eighth, volume),
+        Pause(Twentyfour),
+        Fis(Quarter, volume),
+
+        Fis(Sixteenth, volume),
+        Fis(Sixteenth, volume),
+        G(Sixteenth, volume),
+        Pause(Sixteenth),
+        G(Eighth, volume),
+        A(Quarter, volume),
+        A(Eighth, volume),
+        Pause(Thirtytwo),
+        A(Eighth, volume),
+
+        A(Sixteenth, volume),
+        A(Sixteenth, volume),
+        A(Sixteenth, volume),
+        Pause(Sixteenth),
+        A(Eighth, volume),
+        G(Eighth, volume),
+        Fis(Quarter, volume),
+        Fis(Eighth, volume),
+        Pause(Twentyfour),
+        Fis(Quarter, volume),
+
+        Fis(Sixteenth, volume),
+        G(Sixteenth, volume),
+        A(Sixteenth, volume),
+        Pause(Sixteenth),
+        G(Eighth, volume),
+        Fis(Quarter, volume),
+        Fis(Eighth, volume),
+        Pause(Twentyfour),
+        Fis(Eighth, volume),
     ]);
     let mut samples = Vec::new();
     for sample in melody.play(&source, envelope) {
@@ -94,6 +139,8 @@ impl Signal {
 
 #[derive(Debug)]
 enum Duration {
+    Thirtytwo,
+    Twentyfour,
     Sixteenth,
     Eighth,
     Quarter,
@@ -104,6 +151,8 @@ enum Duration {
 impl Duration {
     fn length(&self, bpm: Bpm) -> f32 {
         match self {
+            Duration::Thirtytwo => 60.0 / bpm as f32 / 8.0,
+            Duration::Twentyfour => 60.0 / bpm as f32 / 6.0,
             Duration::Sixteenth => 60.0 / bpm as f32 / 4.0,
             Duration::Eighth => 60.0 / bpm as f32 / 2.0,
             Duration::Quarter => 60.0 / bpm as f32,

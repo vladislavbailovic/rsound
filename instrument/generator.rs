@@ -81,13 +81,13 @@ impl Generator for Saw {
 }
 
 pub struct Double {
-    one: Sine,
+    one: Triangle,
     two: Triangle
 }
 
 impl Double {
     pub fn new() -> Self {
-        Double{ one: Sine::default(), two: Triangle::new(1.33) }
+        Double{ one: Triangle::default(), two: Triangle::new(1.033) }
     }
 }
 
