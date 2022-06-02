@@ -4,29 +4,26 @@ use output::{pcm,ppm};
 mod instrument;
 use instrument::*;
 
-
 const SAMPLE_RATE: i32 = 44100;
 
 type Bpm = i32;
 
 fn draw_sample_envelope() -> std::io::Result<()> {
-    let duration = 4000;
-    let envelope = Envelope::new(Some(duration as f32 * 0.2), None, Some(duration as f32 * 0.4));
-    let graph = EnvelopeGraph::new(envelope, duration);
+    let duration = 100.0/1000.0;
+    let envelope = Envelope::new(Some(20.0/1000.0), None, Some(50.0/1000.0));
+    let graph = EnvelopeGraph::new(&envelope, duration);
     graph.save("foo.ppm")
 }
 
 struct EnvelopeGraph {
-    envelope: Envelope,
     graph: ppm::Graph
 }
 
 impl EnvelopeGraph {
-    pub fn new(envelope: Envelope, over: i32) -> Self {
+    pub fn new(envelope: &Envelope, over: f32) -> Self {
         let mut graph = ppm::Graph::new(&EnvelopeGraph::extract_samples(&envelope, over));
         graph.align(ppm::Align::Bottom).snap(ppm::Snap::Width);
         Self {
-            envelope,
             graph,
         }
     }
@@ -35,10 +32,11 @@ impl EnvelopeGraph {
         self.graph.save(name)
     }
 
-    fn extract_samples(envelope: &Envelope, duration: i32) -> Vec<f32> {
+    fn extract_samples(envelope: &Envelope, duration: f32) -> Vec<f32> {
         let mut samples = Vec::new();
-        for x in 1..duration {
-            let sample = envelope.amplitude_at(x as f32, 1.0, duration as f32);
+        let all = (duration * 1000.0).floor() as i32;
+        for x in 1..all {
+            let sample = envelope.amplitude_at(x as f32/1000.0, 1.0, duration);
             samples.push(sample*-1.0);
         }
         samples
@@ -113,7 +111,7 @@ fn main() -> std::io::Result<()> {
         Fis(Eighth, volume),
     ]);
     let mut samples = Vec::new();
-    for sample in melody.play(&source, envelope) {
+    for sample in melody.play(&source, &envelope) {
         samples.push(sample);
     }
     ppm::save(&samples)?;
@@ -132,7 +130,7 @@ impl Sequence {
         Self{ tempo, sequence }
     }
 
-    fn play(&self, instrument: &impl Generator, envelope: Envelope) -> Vec<f32> {
+    fn play(&self, instrument: &impl Generator, envelope: &Envelope) -> Vec<f32> {
         let mut score = Vec::new();
         for sound in &self.sequence {
             println!("playing {:?}", sound);
