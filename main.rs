@@ -44,17 +44,17 @@ impl EnvelopeGraph {
 }
 
 fn main() -> std::io::Result<()> {
-    draw_sample_envelope();
-    return Ok(());
+    // draw_sample_envelope()?;
+    // return Ok(());
     use Note::*;
     use Duration::*;
-    // let source = Sine::default();
+    let source = Sine::default();
     // let source = Square::default();
     // let source = Triangle::default();
     // let source = Saw::default();
-    let source = Double::new();
+    // let source = Double::new();
     let volume = 0.5;
-    let envelope = Envelope::new(Some(0.02), None, Some(0.04));
+    let envelope = Envelope::new(Some(20.0/1000.0), None, Some(40.0/1000.0));
     /*
     let melody = Sequence::new(90, vec![
         H(Quarter, volume),
@@ -114,7 +114,9 @@ fn main() -> std::io::Result<()> {
     for sample in melody.play(&source, &envelope) {
         samples.push(sample);
     }
-    ppm::save(&samples)?;
+    // ppm::save(&samples)?;
+    let graph = EnvelopeGraph::new(&envelope, Quarter.length(90));
+    graph.save("foo.ppm");
     pcm::save(&samples)?;
 
     Ok(())
