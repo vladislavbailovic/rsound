@@ -12,16 +12,42 @@ type Bpm = i32;
 fn draw_sample_envelope() -> std::io::Result<()> {
     let duration = 4000;
     let envelope = Envelope::new(Some(duration as f32 * 0.2), None, Some(duration as f32 * 0.4));
-    let mut samples = Vec::new();
-    for x in 1..duration {
-        let sample = envelope.amplitude_at(x as f32, 1.0, duration as f32);
-        samples.push(sample*-1.0);
+    let graph = EnvelopeGraph::new(envelope, duration);
+    graph.save("foo.ppm")
+}
+
+struct EnvelopeGraph {
+    envelope: Envelope,
+    graph: ppm::Graph
+}
+
+impl EnvelopeGraph {
+    pub fn new(envelope: Envelope, over: i32) -> Self {
+        let mut graph = ppm::Graph::new(&EnvelopeGraph::extract_samples(&envelope, over));
+        graph.align(ppm::Align::Bottom).snap(ppm::Snap::Width);
+        Self {
+            envelope,
+            graph,
+        }
     }
-    ppm::save(&samples)?;
-    Ok(())
+
+    pub fn save(&self, name: &str) -> std::io::Result<()> {
+        self.graph.save(name)
+    }
+
+    fn extract_samples(envelope: &Envelope, duration: i32) -> Vec<f32> {
+        let mut samples = Vec::new();
+        for x in 1..duration {
+            let sample = envelope.amplitude_at(x as f32, 1.0, duration as f32);
+            samples.push(sample*-1.0);
+        }
+        samples
+    }
 }
 
 fn main() -> std::io::Result<()> {
+    draw_sample_envelope();
+    return Ok(());
     use Note::*;
     use Duration::*;
     // let source = Sine::default();
