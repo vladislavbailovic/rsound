@@ -71,9 +71,9 @@ impl Graph {
                 continue;
             }
 
-            buffer[offset] = 255;
-            buffer[offset+1] = 255;
-            buffer[offset+2] = 0;
+            buffer[offset] = 100;
+            buffer[offset+1] = 147;
+            buffer[offset+2] = 255;
 
             i+=1;
         }
@@ -126,9 +126,9 @@ pub fn save(sequence: &[f32]) -> std::io::Result<()> {
             continue;
         }
 
-        buffer[offset] = 255;
-        buffer[offset+1] = 255;
-        buffer[offset+2] = 0;
+        buffer[offset] = 100;
+        buffer[offset+1] = 147;
+        buffer[offset+2] = 255;
 
         i+=1;
     }

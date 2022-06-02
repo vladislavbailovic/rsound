@@ -114,9 +114,9 @@ fn main() -> std::io::Result<()> {
     for sample in melody.play(&source, &envelope) {
         samples.push(sample);
     }
-    // ppm::save(&samples)?;
-    let graph = EnvelopeGraph::new(&envelope, Quarter.length(90));
-    graph.save("foo.ppm");
+    ppm::save(&samples)?;
+    // let graph = EnvelopeGraph::new(&envelope, Quarter.length(90));
+    // graph.save("foo.ppm");
     pcm::save(&samples)?;
 
     Ok(())
