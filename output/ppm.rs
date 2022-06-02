@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::{Write,BufWriter};
 
 const MIN_WIDTH: i32 = 800;
+const MAX_WIDTH: i32 = 10000;
 const MAX_HEIGHT: i32 = 600;
 const VERTICAL_PADDING: i32 = 50;
 
@@ -44,7 +45,7 @@ impl Graph {
 
     pub fn snap(&mut self, x: Snap) -> &mut Graph {
         let ppm_width: i32 = match x {
-            Snap::Height => sequence_width(&self.sequence),
+            Snap::Height => sequence_width(&self.sequence).min(MAX_WIDTH),
             Snap::Width => MIN_WIDTH, // TODO: implement snapping by width
         };
         let ppm_height: i32 = match x {
@@ -105,7 +106,7 @@ impl Graph {
 }
 
 pub fn save(sequence: &[f32]) -> std::io::Result<()> {
-    let ppm_width: i32 = sequence_width(sequence);
+    let ppm_width: i32 = sequence_width(sequence).min(MAX_WIDTH);
     let ppm_height: i32 = MAX_HEIGHT;
 
     let max_size = 3 * ppm_width * ppm_height;
